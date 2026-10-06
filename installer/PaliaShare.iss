@@ -16,6 +16,7 @@ SetupIconFile=..\windows\runner\resources\app_icon.ico
 Compression=lzma
 SolidCompression=yes
 ArchitecturesInstallIn64BitMode=x64
+PrivilegesRequired=admin
 UninstallDisplayIcon={app}\{#MyAppExeName}
 
 [Files]
@@ -26,4 +27,10 @@ Name: "{group}\Palia Share"; Filename: "{app}\{#MyAppExeName}"
 Name: "{autodesktop}\Palia Share"; Filename: "{app}\{#MyAppExeName}"
 
 [Run]
+Filename: "netsh.exe"; Parameters: "advfirewall firewall add rule name=\"Palia Share TCP 8765\" dir=in action=allow protocol=TCP localport=8765 profile=private,domain"; Flags: runhidden waituntilterminated
+Filename: "netsh.exe"; Parameters: "advfirewall firewall add rule name=\"Palia Share UDP 8766\" dir=in action=allow protocol=UDP localport=8766 profile=private,domain"; Flags: runhidden waituntilterminated
 Filename: "{app}\{#MyAppExeName}"; Description: "Launch Palia Share"; Flags: nowait postinstall skipifsilent
+
+[UninstallRun]
+Filename: "netsh.exe"; Parameters: "advfirewall firewall delete rule name=\"Palia Share TCP 8765\""; Flags: runhidden waituntilterminated
+Filename: "netsh.exe"; Parameters: "advfirewall firewall delete rule name=\"Palia Share UDP 8766\""; Flags: runhidden waituntilterminated
