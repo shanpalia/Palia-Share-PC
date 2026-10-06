@@ -95,7 +95,7 @@ class _HomePageState extends State<HomePage> {
       setState(() { status = 'Connecting to ${device.name}…'; progress = 0; });
       final socket = await Socket.connect(device.address, transferPort, timeout: const Duration(seconds: 8));
       final files = result.files.where((f) => f.path != null).toList();
-      final header = jsonEncode({'type':'files','files':files.map((f)=>{'name':f.name,'size':File(f.path!).lengthSync()}).toList()}) + '\n';
+      final header = '${jsonEncode({'type':'files','files':files.map((f)=>{'name':f.name,'size':File(f.path!).lengthSync()}).toList()})}\n';
       socket.write(header); await socket.flush();
       var sent = 0;
       final total = files.fold<int>(0, (s, x) => s + File(x.path!).lengthSync());
