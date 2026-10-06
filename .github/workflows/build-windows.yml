@@ -47,12 +47,30 @@ jobs:
       - name: Build Windows release
         run: flutter build windows --release
 
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress
+          $candidates = @(
+            'C:\Program Files (x86)\Inno Setup 6\ISCC.exe',
+            'C:\Program Files\Inno Setup 6\ISCC.exe',
+            'C:\Program Files (x86)\Inno Setup\ISCC.exe',
+            'C:\Program Files\Inno Setup\ISCC.exe'
+          )
+          $iscc = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $iscc) {
+            $iscc = (Get-ChildItem 'C:\Program Files*' -Filter ISCC.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1).FullName
+          }
+          if (-not $iscc) { throw 'Inno Setup ISCC.exe was not found after installation.' }
+          "ISCC_PATH=$iscc" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Host "Using Inno Setup compiler: $iscc"
+
       - name: Build installer
         shell: pwsh
         run: |
-          $iscc = Get-ChildItem 'C:\Program Files (x86)\Inno Setup\ISCC.exe' -ErrorAction SilentlyContinue
-          if ($null -eq $iscc) { choco install innosetup -y --no-progress; $iscc = 'C:\Program Files (x86)\Inno Setup\ISCC.exe' }
-          & $iscc installer\PaliaShare.iss
+          if (-not $env:ISCC_PATH) { throw 'ISCC_PATH is not set.' }
+          & $env:ISCC_PATH installer\PaliaShare.iss
+          if (!(Test-Path 'installer\output\Palia Share Setup.exe')) { throw 'Installer was not created.' }
 
       - name: Upload Windows app folder
         uses: actions/upload-artifact@v4
