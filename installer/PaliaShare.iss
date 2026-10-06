@@ -27,10 +27,10 @@ Name: "{group}\Palia Share"; Filename: "{app}\{#MyAppExeName}"
 Name: "{autodesktop}\Palia Share"; Filename: "{app}\{#MyAppExeName}"
 
 [Run]
-Filename: "netsh.exe"; Parameters: "advfirewall firewall add rule name=\"Palia Share TCP 8765\" dir=in action=allow protocol=TCP localport=8765 profile=private,domain"; Flags: runhidden waituntilterminated
-Filename: "netsh.exe"; Parameters: "advfirewall firewall add rule name=\"Palia Share UDP 8766\" dir=in action=allow protocol=UDP localport=8766 profile=private,domain"; Flags: runhidden waituntilterminated
+Filename: "netsh.exe"; Parameters: "advfirewall firewall add rule name=PaliaShare_TCP_8765 dir=in action=allow protocol=TCP localport=8765 profile=private,domain"; Flags: runhidden waituntilterminated
+Filename: "netsh.exe"; Parameters: "advfirewall firewall add rule name=PaliaShare_UDP_8766 dir=in action=allow protocol=UDP localport=8766 profile=private,domain"; Flags: runhidden waituntilterminated
 Filename: "{app}\{#MyAppExeName}"; Description: "Launch Palia Share"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
-Filename: "netsh.exe"; Parameters: "advfirewall firewall delete rule name=\"Palia Share TCP 8765\""; Flags: runhidden waituntilterminated
-Filename: "netsh.exe"; Parameters: "advfirewall firewall delete rule name=\"Palia Share UDP 8766\""; Flags: runhidden waituntilterminated
+Filename: "netsh.exe"; Parameters: "advfirewall firewall delete rule name=PaliaShare_TCP_8765"; Flags: runhidden waituntilterminated
+Filename: "netsh.exe"; Parameters: "advfirewall firewall delete rule name=PaliaShare_UDP_8766"; Flags: runhidden waituntilterminated
