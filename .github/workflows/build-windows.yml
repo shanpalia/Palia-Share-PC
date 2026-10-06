@@ -1,0 +1,44 @@
+name: Build Palia Share Windows
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.44.4'
+          cache: true
+      - name: Generate Windows platform
+        shell: pwsh
+        run: |
+          if (!(Test-Path windows)) { flutter create . --platforms=windows --project-name palia_share_pc }
+      - name: Get dependencies
+        run: flutter pub get
+      - name: Analyze
+        run: flutter analyze
+      - name: Build Windows release
+        run: flutter build windows --release
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $iscc = Get-ChildItem 'C:\Program Files (x86)\Inno Setup\ISCC.exe' -ErrorAction SilentlyContinue
+          if ($null -eq $iscc) { choco install innosetup -y --no-progress; $iscc = 'C:\Program Files (x86)\Inno Setup\ISCC.exe' }
+          & $iscc installer\PaliaShare.iss
+      - name: Upload Windows app folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: Palia-Share-Windows-Release
+          path: build/windows/x64/runner/Release/
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Palia-Share-Setup
+          path: installer/output/Palia Share Setup.exe
