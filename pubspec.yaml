@@ -1,0 +1,21 @@
+name: palia_share_pc
+description: Palia Share for Windows PC - By PaliaWin Store.
+publish_to: 'none'
+version: 1.0.0+1
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  file_picker: ^10.3.3
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/palia_share_logo.svg
