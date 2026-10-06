@@ -12,6 +12,7 @@ DefaultDirName={autopf}\Palia Share
 DefaultGroupName=Palia Share
 OutputDir=output
 OutputBaseFilename=Palia Share Setup
+SetupIconFile=..\windows\runner\resources\app_icon.ico
 Compression=lzma
 SolidCompression=yes
 ArchitecturesInstallIn64BitMode=x64
