@@ -43,13 +43,14 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() { super.initState(); _start(); }
+
   Future<void> _start() async {
     try {
       _server = await ServerSocket.bind(InternetAddress.anyIPv4, transferPort, shared: true);
       _server!.listen(_handleConnection);
       _udp = await RawDatagramSocket.bind(InternetAddress.anyIPv4, discoveryPort, reuseAddress: true, reusePort: true);
       _udp!.broadcastEnabled = true;
-      _udp!.listen((event) {
+      _udp!.listen((event) async {
         if (event == RawSocketEvent.read) {
           final d = _udp!.receive();
           if (d == null) return;
@@ -57,27 +58,36 @@ class _HomePageState extends State<HomePage> {
             final m = jsonDecode(utf8.decode(d.data));
             if (m['type'] == 'palia_discovery' && m['name'] != null && m['port'] == transferPort) {
               final ip = d.address.address;
-              if (ip != _localIp()) setState(() => devices[ip] = DeviceInfo(m['name'], ip));
+              final localIp = await _localIp();
+              if (ip != localIp && mounted) {
+                setState(() => devices[ip] = DeviceInfo(m['name'], ip));
+              }
             }
           } catch (_) {}
         }
       });
       _timer = Timer.periodic(const Duration(seconds: 2), (_) => _announce());
       _announce();
-      setState(() => status = 'Nearby devices are ready');
-    } catch (e) { setState(() => status = 'Network unavailable: $e'); }
+      if (mounted) setState(() => status = 'Nearby devices are ready');
+    } catch (e) {
+      if (mounted) setState(() => status = 'Network unavailable: $e');
+    }
   }
-  String _localIp() {
-    for (final n in NetworkInterface.listSync(includeLoopback: false, type: InternetAddressType.IPv4)) {
+
+  Future<String> _localIp() async {
+    final interfaces = await NetworkInterface.list(includeLoopback: false, type: InternetAddressType.IPv4);
+    for (final n in interfaces) {
       if (n.addresses.isNotEmpty) return n.addresses.first.address;
     }
     return '';
   }
+
   void _announce() {
     if (_udp == null) return;
     final msg = utf8.encode(jsonEncode({'type':'palia_discovery','name':Platform.localHostname,'port':transferPort}));
     _udp!.send(msg, InternetAddress('255.255.255.255'), discoveryPort);
   }
+
   Future<void> _pickAndSend(DeviceInfo device) async {
     final result = await FilePicker.platform.pickFiles(allowMultiple: true, withData: false);
     if (result == null || result.files.isEmpty) return;
@@ -88,31 +98,39 @@ class _HomePageState extends State<HomePage> {
       final header = jsonEncode({'type':'files','files':files.map((f)=>{'name':f.name,'size':File(f.path!).lengthSync()}).toList()}) + '\n';
       socket.write(header); await socket.flush();
       var sent = 0;
+      final total = files.fold<int>(0, (s, x) => s + File(x.path!).lengthSync());
       for (final f in files) {
         final file = File(f.path!); final size = await file.length(); var done = 0;
         await for (final chunk in file.openRead()) {
           socket.add(chunk); done += chunk.length; sent += chunk.length;
-          setState(() { progress = sent / files.fold<int>(0, (s, x) => s + File(x.path!).lengthSync()); status = 'Sending ${f.name}… ${(done / size * 100).toStringAsFixed(0)}%'; });
+          if (mounted) setState(() { progress = total == 0 ? 0 : sent / total; status = 'Sending ${f.name}… ${(done / size * 100).toStringAsFixed(0)}%'; });
         }
       }
       await socket.flush(); await socket.close();
-      setState(() { progress = 1; status = 'Transfer complete'; });
-    } catch (e) { setState(() => status = 'Transfer failed: $e'); }
+      if (mounted) setState(() { progress = 1; status = 'Transfer complete'; });
+    } catch (e) { if (mounted) setState(() => status = 'Transfer failed: $e'); }
   }
+
   Future<void> _handleConnection(Socket socket) async {
-    receiving = true; final chunks = <int>[]; final completer = Completer<void>();
-    socket.listen((data) { chunks.addAll(data); if (String.fromCharCodes(chunks.take(2)) == '{\"') {} }, onDone: () async {
+    receiving = true;
+    final chunks = <int>[];
+    final completer = Completer<void>();
+    socket.listen((data) {
+      chunks.addAll(data);
+    }, onDone: () async {
       try { await _saveIncoming(Uint8List.fromList(chunks)); } catch (_) {}
-      completer.complete();
+      if (!completer.isCompleted) completer.complete();
     }, onError: (_) { if (!completer.isCompleted) completer.complete(); });
-    setState(() => status = 'Receiving file…');
+    if (mounted) setState(() => status = 'Receiving file…');
     await completer.future;
   }
+
   Future<void> _saveIncoming(Uint8List data) async {
     final path = await FilePicker.platform.saveFile(dialogTitle: 'Save received file', fileName: 'PaliaShare-Received');
     if (path != null) await File(path).writeAsBytes(data);
     if (mounted) setState(() { receiving = false; progress = 1; status = path == null ? 'Transfer cancelled' : 'File received'; });
   }
+
   @override void dispose() { _timer?.cancel(); _udp?.close(); _server?.close(); super.dispose(); }
 
   @override
