@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<defs>
+ <linearGradient id="mint" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#35ffe0"/><stop offset="1" stop-color="#16c9a5"/></linearGradient>
+ <linearGradient id="navy" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#17394a"/><stop offset="1" stop-color="#071b27"/></linearGradient>
+ <linearGradient id="arrow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#19f5c4"/><stop offset="1" stop-color="#00a987"/></linearGradient>
+ <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-opacity=".25"/></filter>
+</defs>
+<rect width="1024" height="1024" rx="210" fill="#fff"/>
+<rect x="46" y="46" width="932" height="932" rx="190" fill="#fff" stroke="url(#mint)" stroke-width="34"/>
+<g filter="url(#shadow)" fill="url(#navy)">
+ <path d="M170 270a105 105 0 0 1 105-105h155v135H330v424h100v135H275a105 105 0 0 1-105-105z"/>
+ <path d="M854 270a105 105 0 0 0-105-105H594v135h100v424H594v135h155a105 105 0 0 0 105-105z"/>
+</g>
+<path d="M285 510h350l-78-78a38 38 0 0 1 54-54l143 143a38 38 0 0 1 0 54L611 718a38 38 0 0 1-54-54l78-78H285a38 38 0 0 1 0-76z" fill="url(#arrow)" filter="url(#shadow)"/>
+</svg>
